@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snack Store Control Panel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fdf6ec;
+      color: #333;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    h1, h2 {
+      color: #e07b00;
+      text-align: center;
+    }
+    input[type="password"], input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    button {
+      background: #f2994a;
+      border: none;
+      padding: 10px 18px;
+      color: white;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    button:hover {
+      background: #e07b00;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #f2994a;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #f2994a;
+      color: white;
+    }
+    #orders {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #f2994a;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fffdf7;
+    }
+    .order {
+      border-bottom: 1px solid #f2994a;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login">
+    <h1>Admin Login</h1>
+    <input type="password" id="password" placeholder="Enter password" />
+    <button onclick="verify()">Login</button>
+    <p id="error" style="color:red; display:none;">❌ Incorrect password</p>
+  </div>
+
+  <div id="panel" style="display:none;">
+    <h1>Snack Store Control Panel</h1>
+
+    <h2>📦 Inventory</h2>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Price</th><th>Stock</th><th>Update</th></tr>
+      </thead>
+      <tbody id="items-body"></tbody>
+    </table>
+
+    <h3>Add New Item</h3>
+    <input type="text" id="new-name" placeholder="Name" />
+    <input type="number" id="new-price" placeholder="Price" />
+    <input type="number" id="new-stock" placeholder="Stock" />
+    <button onclick="addItem()">➕ Add Item</button>
+
+    <h2>📬 Orders</h2>
+    <div id="orders">Loading orders...</div>
+
+    <h2>💰 Total Earnings: $<span id="earnings">0.00</span></h2>
+  </div>
+
+  <script>
+    const API = "https://script.google.com/macros/s/AKfycbylcsO6SfJg4UDOYZzy_GHez3WWQwxm7Rzvm9jVpC40ch-9V0CBaq9P-CMOv3_03g9V/exec";
+    const PASSWORD = "tsnotdapsd";
+
+    function verify() {
+      const pw = document.getElementById("password").value;
+      if (pw === PASSWORD) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("panel").style.display = "block";
+        loadEverything();
+      } else {
+        document.getElementById("error").style.display = "block";
+      }
+    }
+
+    async function loadEverything() {
+      await loadItems();
+      await loadOrders();
