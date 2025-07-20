@@ -115,3 +115,98 @@
     async function loadEverything() {
       await loadItems();
       await loadOrders();
+      await loadEarnings();
+      setInterval(() => {
+        loadOrders();
+        loadEarnings();
+      }, 5000);
+    }
+
+    async function loadItems() {
+      const res = await fetch(`${API}?type=items`);
+      const items = await res.json();
+      const tbody = document.getElementById("items-body");
+      tbody.innerHTML = "";
+
+      items.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td><input type="number" value="${item.price}" step="0.01" /></td>
+          <td><input type="number" value="${item.stock}" /></td>
+          <td><button>Save</button></td>
+        `;
+        row.querySelector("button").onclick = async () => {
+          const price = parseFloat(row.querySelectorAll("input")[0].value);
+          const stock = parseInt(row.querySelectorAll("input")[1].value);
+          await fetch(API, {
+            method: "POST",
+            body: JSON.stringify({
+              action: "updateItem",
+              item: { id: item.id, price, stock }
+            }),
+            headers: { "Content-Type": "application/json" }
+          });
+          loadItems();
+        };
+        tbody.appendChild(row);
+      });
+    }
+
+    async function addItem() {
+      const name = document.getElementById("new-name").value;
+      const price = parseFloat(document.getElementById("new-price").value);
+      const stock = parseInt(document.getElementById("new-stock").value);
+      if (!name || isNaN(price) || isNaN(stock)) {
+        alert("Please fill all fields.");
+        return;
+      }
+      await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "addItem",
+          item: { name, price, stock }
+        }),
+        headers: { "Content-Type": "application/json" }
+      });
+      document.getElementById("new-name").value = "";
+      document.getElementById("new-price").value = "";
+      document.getElementById("new-stock").value = "";
+      loadItems();
+    }
+
+    async function loadOrders() {
+      const res = await fetch(`${API}?type=orders`);
+      const orders = await res.json();
+      const ordersDiv = document.getElementById("orders");
+      ordersDiv.innerHTML = "";
+
+      if (orders.length === 0) {
+        ordersDiv.innerText = "No orders yet.";
+        return;
+      }
+
+      orders.forEach(order => {
+        const div = document.createElement("div");
+        div.className = "order";
+        const items = JSON.parse(order.items || "[]")
+          .map(i => `${i.name} x${i.qty}`).join(", ");
+        div.innerHTML = `
+          <strong>${order.name}</strong><br>
+          📍 ${order.delivery_location} @ ${order.delivery_time}<br>
+          🛒 ${items}<br>
+          💵 $${parseFloat(order.total).toFixed(2)}
+        `;
+        ordersDiv.appendChild(div);
+      });
+    }
+
+    async function loadEarnings() {
+      const res = await fetch(`${API}?type=earnings`);
+      const total = await res.text();
+      document.getElementById("earnings").innerText = parseFloat(total).toFixed(2);
+    }
+  </script>
+
+</body>
+</html>
